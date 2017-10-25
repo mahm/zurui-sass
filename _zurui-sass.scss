@@ -1,0 +1,257 @@
+//--------------------------------------------------------------------------------
+// functions
+@function compact($vars...) {
+  $separator: list-separator($vars);
+  $list: ();
+  @each $var in $vars {
+    @if $var {
+      $list: append($list, $var, $separator);
+    }
+  }
+  @return $list;
+}
+
+@function first-value-of($list) {
+  @return nth($list, 1);
+}
+
+@function -compass-space-list($item1, $item2:null, $item3:null, $item4:null, $item5:null, $item6:null, $item7:null, $item8:null, $item9:null) {
+  $items: ();
+  // Support for polymorphism.
+  @if type-of($item1) == 'list' {
+    // Passing a single array of properties.
+    $items: $item1;
+  } @else {
+    $items: $item1 $item2 $item3 $item4 $item5 $item6 $item7 $item8 $item9;
+  }
+
+  $full: first-value-of($items);
+
+  @for $i from 2 through length($items) {
+    $item: nth($items, $i);
+    @if $item != null {
+      $full: $full $item;
+    }
+  }
+
+  @return $full;
+}
+
+@function -compass-list-size($list) {
+  @return length($list);
+}
+
+@function prefixed($prefix, $property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  $properties: $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9;
+  $prefixed: false;
+  @each $item in $properties {
+    @if type-of($item) == 'string' {
+      $prefixed: $prefixed or str-index($item, 'url') != 1 and str-index($item, 'rgb') != 1 and str-index($item, '#') != 1;
+    } @elseif type-of($item) == 'color' {
+    } @elseif $item != null {
+      $prefixed: true;
+    }
+  }
+  @return $prefixed;
+}
+
+@function prefix($prefix, $property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  $properties: "";
+
+  // Support for polymorphism.
+  @if type-of($property1) == 'list' {
+    // Passing a single array of properties.
+    $properties: $property1;
+  } @else {
+    // Passing multiple properties.
+    $properties: $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9;
+  }
+
+  $props: false;
+  @each $item in $properties {
+    @if $item == null {}
+    @else {
+      @if prefixed($prefix, $item) {
+        $item: #{$prefix}-#{$item};
+      }
+      @if $props {
+        $props: $props, $item;
+      }
+      @else {
+        $props: $item;
+      }
+    }
+  }
+  @return $props;
+}
+
+@function -svg($property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  @return prefix('-svg', $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9);
+}
+
+@function -owg($property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  @return prefix('-owg', $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9);
+}
+
+@function -webkit($property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  @return prefix('-webkit', $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9);
+}
+
+@function -moz($property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  @return prefix('-moz', $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9);
+}
+
+@function -o($property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  @return prefix('-o', $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9);
+}
+
+@function -pie($property1, $property2:null, $property3:null, $property4:null, $property5:null, $property6:null, $property7:null, $property8:null, $property9:null) {
+  @return prefix('-pie', $property1, $property2, $property3, $property4, $property5, $property6, $property7, $property8, $property9);
+}
+
+//--------------------------------------------------------------------------------
+// mix-ins
+$experimental-support-for-mozilla: true !default;
+$experimental-support-for-webkit: true !default;
+$support-for-original-webkit-gradients: true !default;
+$experimental-support-for-opera: true !default;
+$experimental-support-for-microsoft: true !default;
+$experimental-support-for-khtml: false !default;
+$experimental-support-for-svg: false !default;
+$experimental-support-for-pie: false !default;
+
+@mixin experimental($property, $value,
+  $moz      : $experimental-support-for-mozilla,
+  $webkit   : $experimental-support-for-webkit,
+  $o        : $experimental-support-for-opera,
+  $ms       : $experimental-support-for-microsoft,
+  $khtml    : $experimental-support-for-khtml,
+  $official : true
+) {
+  @if $webkit  and $experimental-support-for-webkit    { -webkit-#{$property} : $value; }
+  @if $khtml   and $experimental-support-for-khtml     {  -khtml-#{$property} : $value; }
+  @if $moz     and $experimental-support-for-mozilla   {    -moz-#{$property} : $value; }
+  @if $ms      and $experimental-support-for-microsoft {     -ms-#{$property} : $value; }
+  @if $o       and $experimental-support-for-opera     {      -o-#{$property} : $value; }
+  @if $official                                        {         #{$property} : $value; }
+}
+
+//--------------------------------------------------------------------------------
+// box-shadow
+$_zm-default-box-shadow-color: #333333 !default;
+$_zm-default-box-shadow-h-offset: 0px !default;
+$_zm-default-box-shadow-v-offset: 0px !default;
+$_zm-default-box-shadow-blur: 5px !default;
+$_zm-default-box-shadow-spread : false !default;
+$_zm-default-box-shadow-inset : false !default;
+
+@mixin _zm-box-shadow(
+  $shadow-1 : default,
+  $shadow-2 : false,
+  $shadow-3 : false,
+  $shadow-4 : false,
+  $shadow-5 : false,
+  $shadow-6 : false,
+  $shadow-7 : false,
+  $shadow-8 : false,
+  $shadow-9 : false,
+  $shadow-10: false
+) {
+  @if $shadow-1 == default {
+    $shadow-1 : -compass-space-list(compact(if($_zm-default-box-shadow-inset, inset, false), $_zm-default-box-shadow-h-offset, $_zm-default-box-shadow-v-offset, $_zm-default-box-shadow-blur, $_zm-default-box-shadow-spread, $_zm-default-box-shadow-color));
+  }
+  $shadow : compact($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10);
+  @include experimental(box-shadow, $shadow,
+          -moz, -webkit, not(-o), not(-ms), not(-khtml), official
+  );
+}
+
+//--------------------------------------------------------------------------------
+// images
+@mixin _zm-background-image(
+  $image-1,
+  $image-2: false,
+  $image-3: false,
+  $image-4: false,
+  $image-5: false,
+  $image-6: false,
+  $image-7: false,
+  $image-8: false,
+  $image-9: false,
+  $image-10: false
+) {
+  $images: compact($image-1, $image-2, $image-3, $image-4, $image-5, $image-6, $image-7, $image-8, $image-9, $image-10);
+  $add-pie-bg: prefixed(-pie,   $images) or -compass-list-size($images) > 1;
+
+  @if $experimental-support-for-svg          and prefixed(-svg,    $images) { background-image:    -svg($images); background-size: 100%; }
+  @if $support-for-original-webkit-gradients and prefixed(-owg,    $images) { background-image:    -owg($images); }
+  @if $experimental-support-for-webkit       and prefixed(-webkit, $images) { background-image: -webkit($images); }
+  @if $experimental-support-for-mozilla      and prefixed(-moz,    $images) { background-image:    -moz($images); }
+  @if $experimental-support-for-opera        and prefixed(-o,      $images) { background-image:      -o($images); }
+  @if $experimental-support-for-pie          and $add-pie-bg                { @warn "PIE does not support background-image. Use @include background(#{$images}) instead." }
+  background-image:         $images ;
+}
+
+//--------------------------------------------------------------------------------
+// Cheat lines
+@mixin zurui-line-top($op1:.2,$op2:.3) {
+  @include _zm-box-shadow(rgba(255, 255, 255, $op2) 0 1px 0 inset);
+  border-top: 1px solid rgba(0, 0, 0, $op1);
+}
+
+@mixin zurui-line-left($op1:.2,$op2:.3) {
+  @include _zm-box-shadow(rgba(255, 255, 255, $op2) -1px 0 0);
+  border-left: 1px solid rgba(0, 0, 0, $op1);
+}
+
+@mixin zurui-line-right($op1:.2,$op2:.3) {
+  @include _zm-box-shadow(rgba(255, 255, 255, $op2) -1px 0 0 inset);
+  border-right: 1px solid rgba(0, 0, 0, $op1);
+}
+
+@mixin zurui-line-bottom($op1:.2,$op2:.3) {
+  @include _zm-box-shadow(rgba(255, 255, 255, $op2) 0 1px 0);
+  border-bottom: 1px solid rgba(0, 0, 0, $op1);
+}
+
+//--------------------------------------------------------------------------------
+// Cheat font shadows
+@mixin zurui-ts-000($op:.4) {
+  text-shadow: 1px -1px rgba(0, 0, 0, $op);
+}
+
+@mixin zurui-ts-fff($op:.7) {
+  text-shadow: -1px 1px rgba(255, 255, 255, $op);
+}
+
+//--------------------------------------------------------------------------------
+// Cheat gradation
+@mixin zurui-gradient-top-lighten($color:#666, $lighten:10%) {
+  @include _zm-background-image(linear-gradient(lighten($color, $lighten) 0%, $color 100%));
+  background-color: $color;
+}
+
+@mixin zurui-gradient-top-darken($color:#666, $darken:10%) {
+  @include _zm-background-image(linear-gradient(darken($color, $darken) 0%, $color 100%));
+  background-color: $color;
+}
+
+//--------------------------------------------------------------------------------
+// Cheat box shadow
+@mixin zurui-box-outer($op1:2px) {
+  @include _zm-box-shadow(rgba(0, 0, 0, .15) 0 0 $op1);
+}
+
+@mixin zurui-box-inner($op1:20px) {
+  @include _zm-box-shadow(rgba(0, 0, 0, .2) 0 0 $op1 inset);
+}
+
+@mixin zurui-box-deboss($border:.1, $shadow:.1, $highlight:1) {
+  @include _zm-box-shadow(rgba(0, 0, 0, $shadow) -1px 1px 2px inset, rgba(255, 255, 255, $highlight) -1px 1px 0);
+  border: 1px solid rgba(0, 0, 0, $border);
+}
+
+@mixin zurui-box-emboss($border:.15, $shadow:.05, $highlight:1) {
+  @include _zm-box-shadow(rgba(0, 0, 0, $shadow) -1px 1px 0, rgba(255, 255, 255, $highlight) -1px 1px 0 inset);
+  border: 1px solid rgba(0, 0, 0, $border);
+}
